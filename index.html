@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <script
+      src="https://thunkable.github.io/webviewer-extension/thunkableWebviewerExtension.js"
+      type="text/javascript"
+    ></script>
+  </head>
+  <body style="margin: 0px; background-color: transparent; overflow: hidden;">
+    <!-- Visible Date Input -->
+    <input id="dateInput" type="date"
+      style="
+        color: #757575; 
+        background-color: #FFFFFF; 
+        font-size: 16px; 
+        width: 150px; 
+        height: 55px; 
+        text-align: left; 
+        padding-left: 10px;
+        border: none;" 
+    />
+
+    <script>
+      const dateInput = document.getElementById("dateInput");
+
+      // Set today's date and minimum selectable date
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const formattedToday = `${year}-${month}-${day}`;
+
+      dateInput.min = formattedToday; // Minimum date
+      dateInput.value = formattedToday; // Default date
+
+      // Function to parse and adjust date correctly
+      const parseDate = (dateString) => {
+        const [year, month, day] = dateString.split("-");
+        return new Date(year, month - 1, day); // Use local time
+      };
+
+      // Function to format date as "Jan 22, 2025"
+      const formatDate = (date) => {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Intl.DateTimeFormat('en-US', options).format(date);
+      };
+
+      // Change text color and handle date selection
+      dateInput.addEventListener("change", () => {
+        const selectedDate = parseDate(dateInput.value);
+        const minDate = parseDate(dateInput.min);
+
+        if (selectedDate < minDate) {
+          // Send error message to Thunkable
+          ThunkableWebviewerExtension.postMessage(
+            JSON.stringify({ type: "error", message: "Please select a date that is today or later." })
+          );
+
+          // Reset to today's date and default color
+          dateInput.value = formattedToday;
+          dateInput.style.color = "#757575";
+        } else {
+          // Change text color to black for valid dates
+          dateInput.style.color = "#000000";
+
+          // Format date as "Jan 22, 2025"
+          const formattedDate = formatDate(selectedDate);
+
+          // Send formatted date to Thunkable
+          ThunkableWebviewerExtension.postMessage(
+            JSON.stringify({ type: "dateSelected", date: formattedDate })
+          );
+        }
+      });
+    </script>
+  </body>
+</html>
